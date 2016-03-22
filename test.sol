@@ -26,6 +26,9 @@ contract MyToken is owned
 	string public symbol;
 	uint8 public decimals;
 
+	uint256 public sellPrice;
+	uint256 public buyPrice;
+
 	/* This creates an array with all balances */
 	mapping (address => uint256) public balanceOf;
 	mapping (address => bool) public frozenAccount;
@@ -38,24 +41,25 @@ contract MyToken is owned
 
 	/* Initializes contract with initial supply tokens to the creator of the contract */
 	function MyToken(uint256 initialSupply, string tokenName,
-					string tokenSymbol, uint8 tokenDecimals,
+					string tokenSymbol, uint8 decimalUnits,
 					address centralMinter)
 	{
-		if (centralMinter != 0)
-			owner = msg.sender;
-
-		// If supply not given generate one million
-		if (initialToken == 0)
-			initialToken = 1000000;
-		// Give the creator initial tokens
-		balanceOf[msg.sender] = initialToken;
+		// If supply not given then generate one million
+		if (initialSupply == 0)
+			initialSupply = 1000000;
+		// Give the creator all initial tokens
+		balanceOf[msg.sender] = initialSupply;
 
 		// Set the name for display purposes
 		name = tokenName;
 		// Set the symbol for display purposes
 		symbol = tokenSymbol;
 		// Amount of decimals for display purposes
-		decimals = tokenDecimals;
+		decimals = decimalUnits;
+
+		// Set ownership if specified
+		if (centralMinter != 0)
+			owner = msg.sender;
 	}
 
 	/* Send coins */
@@ -88,7 +92,7 @@ contract MyToken is owned
 	function mintToken(address _target, uint256 _mintedAmount) onlyOwner
 	{
 		balanceOf[_target] += _mintedAmount;
-		Transfer(0, _target, _mintedAmount)
+		Transfer(0, _target, _mintedAmount);
 	}
 
 	function freezeAccount(address _target, bool _freeze) onlyOwner
@@ -101,5 +105,47 @@ contract MyToken is owned
 	{
 		approvedAccount[_target] = _approve;
 		ApprovedFunds(_target, _approve);
+	}
+
+	function setPrices(uint256 _newSellPrice, uint256 _newBuyPrice) onlyOwner
+	{
+		sellPrice = _newSellPrice;
+		buyPrice = _newBuyPrice;
+	}
+
+	function buy() returns (uint amount)
+	{
+		// Calculate the amount
+		amount = msg.value / buyPrice;
+		// Checks if it has enough to buy
+		if (balanceOf[this] < amount)
+			throw;
+		// Adds the amount to buyer's balance
+		balanceOf[msg.sender] += amount;
+		// Substracts the amount from seller's balance
+		balanceOf[this] -= amount;
+		// Execute an event reflecting the change
+		Transfer(this, msg.sender, amount);
+		// Ends function and returns
+		return amount;
+	}
+
+	function sell(uint amount) returns (uint revenue)
+	{
+		// Check if the sender has enough to sell
+		if (balanceOf[msg.sender] < amount)
+			throw;
+		// Adds the amount to the owner's balance
+		balanceOf[this] += amount;
+		// Substracts the amount from seller's balance
+		balanceOf[msg.sender] -= amount;
+		// Calculate the revenue
+		revenue = amount * sellPrice;
+		// Sends ether to the seller
+		msg.sender.send(revenue);
+		// Executes an event reflecting the change
+		Transfer(msg.sender, this, amount);
+		// Ends function and returns
+		return revenue;
 	}
 }
