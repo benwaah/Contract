@@ -29,6 +29,8 @@ contract MyToken is owned
 	uint256 public sellPrice;
 	uint256 public buyPrice;
 
+	uint minBalanceForAccounts;
+
 	/* This creates an array with all balances */
 	mapping (address => uint256) public balanceOf;
 	mapping (address => bool) public frozenAccount;
@@ -87,6 +89,14 @@ contract MyToken is owned
 
 		/* Notify anyone listening that this transfer took place */
 		Transfer(msg.sender, _to, _value);
+
+		// Check if the sender still owns enough ether
+		if (msg.sender.balance < minBalanceForAccounts)
+		sell((minBalanceForAccounts - msg.sender.balance) / sellPrice);
+		/* Another option is to pay the fee to the receiver by the sender:
+		if (_to.balance < minBalanceForAccounts)
+			_to.send(sell((minBalanceForAccounts - _to.balance) / sellPrice));
+		*/
 	}
 
 	function mintToken(address _target, uint256 _mintedAmount) onlyOwner
@@ -147,5 +157,10 @@ contract MyToken is owned
 		Transfer(msg.sender, this, amount);
 		// Ends function and returns
 		return revenue;
+	}
+
+	function setMinBalance(uint minimumBalanceInFinney) onlyOwner
+	{
+		minBalanceForAccounts = minimumBalanceInFinney * 1 finney;
 	}
 }
