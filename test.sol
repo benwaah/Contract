@@ -11,6 +11,7 @@ contract owned
 	{
 		if (msg.sender != owner)
 			throw;
+		_
 	}
 
 	function transferOwnership(address newOwner) onlyOwner
@@ -162,5 +163,12 @@ contract MyToken is owned
 	function setMinBalance(uint minimumBalanceInFinney) onlyOwner
 	{
 		minBalanceForAccounts = minimumBalanceInFinney * 1 finney;
+	}
+
+	/* This unnamed function is called whenever someone tries to send ether to it */
+	function ()
+	{
+		// Prevent accidental sending of ether
+		throw;
 	}
 }
