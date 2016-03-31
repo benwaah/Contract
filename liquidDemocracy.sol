@@ -40,7 +40,7 @@ contract LiquidDemocracy {
     }
 
     function vote(address nominatedAddress) returns (uint voteIndex) {
-        if (voterId[msg.sender]== 0) {
+        if (voterId[msg.sender] == 0) {
             voterId[msg.sender] = delegatedVotes.length;
             numberOfVotes++;
             voteIndex = delegatedVotes.length++;
@@ -74,10 +74,10 @@ contract LiquidDemocracy {
             lastWeightCalculation = now;
 
             // Distribute the initial weight
-            for (uint i=1; i< delegatedVotes.length; i++) {
+            for (uint i = 1; i < delegatedVotes.length; i++) {
                 voteWeight[delegatedVotes[i].nominee] = 0;
             }
-            for (i=1; i< delegatedVotes.length; i++) {
+            for (i = 1; i < delegatedVotes.length; i++) {
                 voteWeight[delegatedVotes[i].voter] = votingToken.balanceOf(delegatedVotes[i].voter);
             }
         }
@@ -85,7 +85,7 @@ contract LiquidDemocracy {
             numberOfDelegationRounds++;
             uint lossRatio = 100 * delegatedPercent ** numberOfDelegationRounds / 100 ** numberOfDelegationRounds;
             if (lossRatio > 0) {
-                for (i=1; i< delegatedVotes.length; i++) {
+                for (i = 1; i < delegatedVotes.length; i++) {
                     v = delegatedVotes[i];
 
                     if (v.nominee != v.voter && voteWeight[v.voter] > 0) {
@@ -94,7 +94,7 @@ contract LiquidDemocracy {
                         voteWeight[v.nominee] += weight;
                     }
 
-                    if (numberOfDelegationRounds>3 && voteWeight[v.nominee] > currentMax) {
+                    if (numberOfDelegationRounds > 3 && voteWeight[v.nominee] > currentMax) {
                         currentWinner = v.nominee;
                         currentMax = voteWeight[v.nominee];
                     }
